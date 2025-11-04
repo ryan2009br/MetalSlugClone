@@ -1,35 +1,24 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
 
 public class GunFollow : MonoBehaviour
 {
-    public GameObject projectilePrefab;
-    public Transform firePoint;
-    public float projectileSpeed = 10f;
+    [Header("Refer√™ncias")]
+    public Transform player; // corpo do jogador
+    public Transform firePoint; // ponto onde o proj√©til nasce
+    public GameObject projectilePrefab; // prefab da bala
 
-    public Transform characterTransform; // referÍncia ao corpo do personagem
-    public float minAngle = -60f; // ‚ngulo mÌnimo de rotaÁ„o
-    public float maxAngle = 60f;  // ‚ngulo m·ximo de rotaÁ„o
+    [Header("Configura√ß√µes")]
+    public float projectileSpeed = 10f;
+    public float verticalLimit = 60f; // limite da rota√ß√£o vertical
 
     private bool facingRight = true;
 
     void Update()
     {
-        UpdateFacing();
         AimAtMouse();
 
         if (Input.GetMouseButtonDown(0))
-        {
             Shoot();
-        }
-    }
-
-    void UpdateFacing()
-    {
-        // Detecta se o personagem virou com base na escala X (ajuste se usa flipX ou rotaÁ„o)
-        if (characterTransform.localScale.x > 0)
-            facingRight = true;
-        else
-            facingRight = false;
     }
 
     void AimAtMouse()
@@ -39,23 +28,53 @@ public class GunFollow : MonoBehaviour
 
         float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
-        if (!facingRight)
+        // Se o mouse atravessar para o outro lado ‚Üí vira o player e a arma
+        if ((facingRight && direction.x < 0) || (!facingRight && direction.x > 0))
         {
-            // Inverte o ‚ngulo se estiver virado para a esquerda
-            angle = 180 - angle;
+            Flip();
         }
 
-        // Limita o ‚ngulo
-        angle = Mathf.Clamp(angle, minAngle, maxAngle);
+        // Rota√ß√£o da arma limitada verticalmente
+        if (facingRight)
+        {
+            angle = Mathf.Clamp(angle, -verticalLimit, verticalLimit);
+            transform.rotation = Quaternion.Euler(0, 0, angle);
+        }
+        else
+        {
+            angle = Mathf.Clamp(angle, -verticalLimit, verticalLimit);
+            transform.rotation = Quaternion.Euler(0, 0, 180 - angle);
+        }
+    }
 
-        // Aplica rotaÁ„o
-        transform.rotation = Quaternion.Euler(0, 0, angle);
+    void Flip()
+    {
+        facingRight = !facingRight;
+
+        // Espelha o jogador
+        Vector3 playerScale = player.localScale;
+        playerScale.x *= -1;
+        player.localScale = playerScale;
+
+        // Espelha a arma no eixo Y para corrigir a orienta√ß√£o
+        Vector3 gunScale = transform.localScale;
+        gunScale.y *= -1;
+        transform.localScale = gunScale;
     }
 
     void Shoot()
     {
+        if (projectilePrefab == null || firePoint == null)
+            return;
+
+        // Cria o proj√©til
         GameObject bullet = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
         Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
-        rb.velocity = firePoint.right * projectileSpeed;
+
+        if (rb != null)
+        {
+            // Faz a bala ir na dire√ß√£o certa (dependendo do lado que o jogador olha)
+            rb.velocity = firePoint.right * projectileSpeed;
+        }
     }
 }
