@@ -3,20 +3,22 @@ using UnityEngine;
 public class PlayerMovementPlat : MonoBehaviour
 {
     [Header("Movimento")]
-    public float moveSpeed = 5f;       // velocidade normal
-    public float runSpeed = 8f;        // velocidade correndo
+    public float moveSpeed = 5f;
+    public float runSpeed = 8f;
     private float currentSpeed;
 
     [Header("Pulo")]
     public float jumpForce = 10f;
     private bool isGrounded;
 
-    [Header("Checagem de ch�o")]
-    public Transform groundCheck;      // empty object embaixo do player
+    [Header("Checagem de chão")]
+    public Transform groundCheck;
     public float groundRadius = 0.2f;
     public LayerMask groundLayer;
 
     private Rigidbody2D rb;
+
+    [HideInInspector] public bool facingRight = true;
 
     void Start()
     {
@@ -25,18 +27,11 @@ public class PlayerMovementPlat : MonoBehaviour
 
     void Update()
     {
-        // --- MOVIMENTO HORIZONTAL ---
         float moveInput = Input.GetAxisRaw("Horizontal");
 
-        // checa se est� correndo (Shift Esquerdo pressionado)
-        if (Input.GetKey(KeyCode.LeftShift))
-            currentSpeed = runSpeed;
-        else
-            currentSpeed = moveSpeed;
-
+        currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : moveSpeed;
         rb.linearVelocity = new Vector2(moveInput * currentSpeed, rb.linearVelocity.y);
 
-        // --- PULO ---
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
 
         if (isGrounded && Input.GetButtonDown("Jump"))
@@ -44,14 +39,17 @@ public class PlayerMovementPlat : MonoBehaviour
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
 
-        // --- FLIPAR SPRITE (virar personagem) ---
-        if (moveInput > 0)
-            transform.localScale = new Vector3(2, 2, 2);
-        else if (moveInput < 0)
-            transform.localScale = new Vector3(-2, 2, 2);
+        // 🚫 NÃO FLIPA AQUI — o GunFollow cuida disso
     }
 
-    // visualizar raio do groundCheck
+    public void Flip()
+    {
+        facingRight = !facingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+    }
+
     void OnDrawGizmosSelected()
     {
         if (groundCheck != null)
