@@ -2,59 +2,66 @@ using UnityEngine;
 
 public class PlayerMovementPlat : MonoBehaviour
 {
-    [Header("Movimento")]
-    public float moveSpeed = 5f;
-    public float runSpeed = 8f;
-    private float currentSpeed;
+    //==============================================================
+    // CONFIGURAÇÕES PÚBLICAS
+    //==============================================================
+    [Header("Configurações de Movimento")]
+    public float speed = 8f;            // Velocidade de movimento horizontal
+    public float jumpForce = 14f;       // Força do pulo
 
-    [Header("Pulo")]
-    public float jumpForce = 10f;
-    private bool isGrounded;
+    [Header("Detecção de Chão")]
+    public Transform groundCheck;       // Ponto que detecta o chão
+    public float groundRadius = 0.1f;   // Raio da detecção
+    public LayerMask groundLayer;       // Camada considerada como chão
 
-    [Header("Checagem de chão")]
-    public Transform groundCheck;
-    public float groundRadius = 0.2f;
-    public LayerMask groundLayer;
+    //==============================================================
+    // VARIÁVEIS PRIVADAS
+    //==============================================================
+    Rigidbody2D rb;                     // Referência ao Rigidbody2D do player
+    bool isGrounded;                    // Indica se o player está tocando o chão
 
-    private Rigidbody2D rb;
-
-    [HideInInspector] public bool facingRight = true;
-
+    //==============================================================
+    // INICIALIZAÇÃO
+    //==============================================================
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
+        rb = GetComponent<Rigidbody2D>(); // Obtém o Rigidbody2D automaticamente
     }
 
+    //==============================================================
+    // ATUALIZAÇÃO PRINCIPAL
+    //==============================================================
     void Update()
     {
-        float moveInput = Input.GetAxisRaw("Horizontal");
-
-        currentSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : moveSpeed;
-        rb.linearVelocity = new Vector2(moveInput * currentSpeed, rb.linearVelocity.y);
-
+        //----------------------------------------------------------
+        // 1 - DETECTAR SE ESTÁ NO CHÃO
+        //----------------------------------------------------------
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundRadius, groundLayer);
 
+        //----------------------------------------------------------
+        // 2 - MOVIMENTO HORIZONTAL
+        //----------------------------------------------------------
+        float moveInput = Input.GetAxisRaw("Horizontal"); // A/D ou setas
+
+        rb.linearVelocity = new Vector2(moveInput * speed, rb.linearVelocity.y);
+
+        //----------------------------------------------------------
+        // 3 - PULO
+        //----------------------------------------------------------
         if (isGrounded && Input.GetButtonDown("Jump"))
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
-
-        // 🚫 NÃO FLIPA AQUI — o GunFollow cuida disso
     }
 
-    public void Flip()
-    {
-        facingRight = !facingRight;
-        Vector3 scale = transform.localScale;
-        scale.x *= -1;
-        transform.localScale = scale;
-    }
-
+    //==============================================================
+    // VISUALIZAÇÃO NO EDITOR (DEBUG)
+    //==============================================================
     void OnDrawGizmosSelected()
     {
         if (groundCheck != null)
         {
-            Gizmos.color = Color.yellow;
+            Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
         }
     }
