@@ -11,8 +11,18 @@ public class CameraFollow : MonoBehaviour
     {
         if (target == null) return;
 
-        // Posição desejada (alvo + offset)
+        // Posição desejada (alvo + offset), mantendo Y e Z fixos
         Vector3 desiredPosition = target.position + offset;
+
+        // Mantém a altura fixa (Y)
+        desiredPosition.y = transform.position.y;
+
+        // Se você quiser que a câmera se mova apenas no eixo X ou Z, basta ajustar o valor da coordenada respectiva
+        // Exemplo: Para mover apenas no eixo X:
+        // desiredPosition.z = transform.position.z;  // Para manter a profundidade fixada
+
+        // Exemplo: Para mover apenas no eixo Z:
+        // desiredPosition.x = transform.position.x;  // Para manter a posição horizontal fixada
 
         // Movimento suave (Lerp)
         Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed * Time.deltaTime);

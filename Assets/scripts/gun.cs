@@ -11,7 +11,18 @@ public class gun : MonoBehaviour
     public float bulletSpeed = 10f;     // Velocidade da bala
     public Transform player;            // Referência ao player (para futuros usos)
     public Rigidbody2D playerRb;        // Referência ao Rigidbody2D do player
+    public float orbitDistance = 2f;    // Distância da arma ao redor do jogador
     public float rotationSpeed = 10f;   // Velocidade de rotação da arma
+
+    private Camera cam;                 // Referência à câmera principal
+
+    //==============================================================
+    // INICIALIZAÇÃO
+    //==============================================================
+    void Start()
+    {
+        cam = Camera.main;  // Pega a câmera principal
+    }
 
     //==============================================================
     // ATUALIZAÇÃO PRINCIPAL
@@ -19,17 +30,31 @@ public class gun : MonoBehaviour
     void Update()
     {
         //----------------------------------------------------------
-        // 1 - ROTACIONAR A ARMA EM DIREÇÃO AO MOUSE
+        // 1 - CALCULAR A POSIÇÃO DO MOUSE NO MUNDO
         //----------------------------------------------------------
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector3 direction = (mousePos - transform.position).normalized;
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        Vector3 mousePos = cam.ScreenToWorldPoint(Input.mousePosition);
+        mousePos.z = 0f;  // Z deve ser 0 para manter no plano 2D
+
+        // Direção do mouse em relação ao jogador
+        Vector3 dirToMouse = mousePos - player.position;
+        dirToMouse.Normalize();
+
+        // Posição da arma ao redor do jogador
+        Vector3 targetPosition = player.position + dirToMouse * orbitDistance;
+
+        // Movimento suave da arma em torno do jogador
+        transform.position = Vector3.Lerp(transform.position, targetPosition, rotationSpeed * Time.deltaTime);
+
+        //----------------------------------------------------------
+        // 2 - ROTACIONAR A ARMA EM DIREÇÃO AO MOUSE
+        //----------------------------------------------------------
+        float angle = Mathf.Atan2(dirToMouse.y, dirToMouse.x) * Mathf.Rad2Deg;
 
         // Rotação suave da arma
         transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, angle), rotationSpeed * Time.deltaTime);
 
         //----------------------------------------------------------
-        // 2 - DISPARO
+        // 3 - DISPARO
         //----------------------------------------------------------
         if (Input.GetMouseButtonDown(0))
         {
@@ -47,6 +72,6 @@ public class gun : MonoBehaviour
 
         // Aplica velocidade à bala
         Rigidbody2D rb = bullet.GetComponent<Rigidbody2D>();
-        rb.linearVelocity = firePoint.right * bulletSpeed;
+        rb.velocity = firePoint.right * bulletSpeed; // Correção: use velocity em vez de linearVelocity
     }
 }
